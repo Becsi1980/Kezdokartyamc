@@ -1,6 +1,10 @@
 let snake: Position[] = []
 let direction = [0, -1]  // Kezdetben felfelé
 let apple: Position = null
+let speed = 700
+let minSpeed = 200
+let speedStep = 20
+let score = 0
 
 class Position {
     constructor(public x: number, public y: number) {}
@@ -28,6 +32,10 @@ function placeApple() {
             }
         }
     }
+    if (empty.length == 0) {
+        winGame()
+        return
+    }
     apple = empty[randint(0, empty.length - 1)]
 }
 
@@ -44,6 +52,16 @@ function draw() {
 
 function gameOver() {
     basic.showIcon(IconNames.Skull)
+    basic.pause(1000)
+    basic.showString("Pont: " + score)
+    control.reset()
+}
+
+function winGame() {
+    basic.showIcon(IconNames.Happy)
+    basic.pause(1000)
+    basic.showString("GYOZELEM!")
+    basic.showString("Pont: " + score)
     control.reset()
 }
 
@@ -51,25 +69,25 @@ function updateDirectionFromTilt() {
     let x = input.acceleration(Dimension.X)
     let y = input.acceleration(Dimension.Y)
 
-    // érzékenységi küszöb (kisebb = érzékenyebb)
-    let threshold = 200
+    let threshold = 100
 
     if (Math.abs(x) > Math.abs(y)) {
-        if (x < -threshold && direction[0] != 1) direction = [-1, 0]  // Bal
-        else if (x > threshold && direction[0] != -1) direction = [1, 0]  // Jobb
+        if (x < -threshold) direction = [-1, 0]  // Bal
+        else if (x > threshold) direction = [1, 0]  // Jobb
     } else {
-        if (y < -threshold && direction[1] != 1) direction = [0, -1]  // Fel
-        else if (y > threshold && direction[1] != -1) direction = [0, 1]   // Le
+        if (y < -threshold) direction = [0, -1]  // Fel
+        else if (y > threshold) direction = [0, 1]  // Le
     }
 }
 
-// ----- Játék indítás -----
+// ----- Játék indítása -----
 snake = [new Position(2, 4)]
+score = 0
 placeApple()
 draw()
 
 basic.forever(function () {
-    basic.pause(500)
+    basic.pause(speed)
 
     updateDirectionFromTilt()
 
@@ -82,7 +100,11 @@ basic.forever(function () {
 
     if (apple && next.equals(apple)) {
         snake.push(next)
+        score += 1
         placeApple()
+        basic.showNumber(score)
+
+        speed = Math.max(speed - speedStep, minSpeed)
     } else {
         snake.push(next)
         snake.shift()
