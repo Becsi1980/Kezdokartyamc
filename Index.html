@@ -1,164 +1,160 @@
-<!DOCTYPE html><html lang="hu">
+<!DOCTYPE html>
+<html lang="hu">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Dev Console</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>KezdőKártya Szerver - Főoldal</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
+    * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to right, #1c1c2b, #202035);
-      color: white;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to right, #6a11cb, #2575fc);
+      color: #fff;
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 20px;
+      min-height: 100vh;
     }
-    header {
+    nav {
       width: 100%;
-      max-width: 1000px;
+      max-width: 900px;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
+      justify-content: center;
+      gap: 20px;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 15px;
+      border-radius: 15px;
+      margin-bottom: 25px;
     }
-    .title {
-      font-size: 2rem;
-      font-weight: bold;
-      color: #00ffff;
+    nav a { color: #fff; text-decoration: none; font-weight: bold; transition: 0.3s; }
+    nav a:hover { color: #ffdd00; }
+    h1 { font-size: 3rem; margin-bottom: 10px; animation: pulse 2.5s infinite ease-in-out; text-shadow: 0 0 15px #000; }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); text-shadow: 0 0 10px #ffdd00; }
+      50% { transform: scale(1.05); text-shadow: 0 0 20px #fff000; }
     }
-    .dark-toggle {
-      cursor: pointer;
-      padding: 8px 16px;
-      border-radius: 8px;
-      border: none;
-      background: #00ffff;
-      color: #000;
-      font-weight: bold;
-    }
-    .panel {
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 12px;
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(6px);
+      border-radius: 20px;
       padding: 20px;
-      margin: 10px 0;
+      margin: 15px 0;
       width: 100%;
-      max-width: 1000px;
-      box-shadow: 0 0 12px rgba(0,0,0,0.5);
+      max-width: 460px;
+      box-shadow: 0 0 25px #00000055;
+      text-align: center;
     }
-    .panel h2 {
-      margin-top: 0;
-      color: #00ffff;
-    }
-    input, textarea {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      background: #ffffff15;
-      color: #fff;
-    }
-    button {
-      background: #00ffff;
-      color: #000;
-      padding: 10px 16px;
-      font-weight: bold;
-      border: none;
-      border-radius: 8px;
+    .ip-box {
+      background: #00000055;
+      padding: 15px;
+      border-radius: 12px;
+      margin-top: 15px;
+      font-size: 1.2rem;
+      letter-spacing: 1px;
       cursor: pointer;
-      transition: transform 0.2s;
     }
-    button:hover {
-      transform: scale(1.05);
-    }
-    .output, .log {
-      background: #111;
-      padding: 10px;
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: -400px;
+      padding: 15px 25px;
       border-radius: 8px;
-      white-space: pre-wrap;
-      font-family: monospace;
-      min-height: 60px;
+      background: #28a745;
+      color: #fff;
+      font-weight: bold;
+      box-shadow: 0 0 10px #000;
+      transition: 0.5s;
+      z-index: 1000;
     }
-    .log {
-      max-height: 200px;
-      overflow-y: auto;
-      background: #1a1a1a;
-    }
-    .time {
-      font-size: 0.9rem;
-      color: #ccc;
-      margin-top: 5px;
-    }
+    .toast.error { background: #dc3545; }
+    .toast.show { right: 20px; }
   </style>
 </head>
 <body>
-  <header>
-    <div class="title">🤖 AI Fejlesztő Konzol</div>
-    <button class="dark-toggle" onclick="toggleTheme()">🌗 Téma váltás</button>
-  </header>  <div class="time" id="timeDisplay"></div>  <div class="panel">
-    <h2>🗨️ AI Chat</h2>
-    <textarea id="chatInput" rows="3" placeholder="Írj be egy kérdést az AI-nak..."></textarea>
-    <button onclick="chatWithAI()">Küldés</button>
-    <div class="output" id="chatOutput">Itt jelenik meg az AI válasza...</div>
-  </div>  <div class="panel">
-    <h2>💻 Kódgenerálás</h2>
-    <input id="codeInput" placeholder="Pl.: Generálj HTML gombot" />
-    <button onclick="generateCode()">Kód generálása</button>
-    <div class="output" id="codeOutput">Itt lesz a kód...</div>
-  </div>  <div class="panel">
-    <h2>📔 AI Napló</h2>
-    <div class="log" id="logBox">Kérésnapló...</div>
-  </div>  <script>
-    function chatWithAI() {
-      const input = document.getElementById('chatInput').value.trim();
-      const output = document.getElementById('chatOutput');
-      if (!input) return output.textContent = 'Írj be valamit!';
-      const response = `🧠 AI válasz:
-„${input}” alapján ez egy szimulált AI válasz.`;
-      output.textContent = response;
-      logAction('AI kérdés: ' + input);
+  <nav>
+    <a href="index.html">Főoldal</a>
+    <a href="shop.html">Bolt</a>
+    <a href="about.html">Rólunk</a>
+    <a href="contact.html">Kapcsolat</a>
+  </nav>
+
+  <h1>KezdőKártya</h1>
+
+  <div class="card">
+    <h2>Üdvözlünk!</h2>
+    <p>Csatlakozz a legjobb Minecraft közösséghez! Itt mindig vár rád a kaland, barátok és izgalmas játékmódok.</p>
+    <div class="ip-box" onclick="copyIP('kezdokartya.mcplay.hu')">
+      🌍 Szerver IP: <b>kezdokartya.mcplay.hu</b>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Mit kínálunk?</h2>
+    <p>⚔️ Randomkits, Kingdoms • 💎 Rangok és Coinok • 🤝 Baráti közösség</p>
+  </div>
+
+  <div class="card">
+    <h2>Státusz</h2>
+    <p>🌍 Online játékosok (Minecraft): <span id="mc-players">Betöltés...</span></p>
+    <p>🎧 Discord online: <span id="discord-online">Betöltés...</span></p>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    function showToast(message, error=false){
+      const toast = document.getElementById('toast');
+      toast.innerText = message;
+      toast.className = 'toast show' + (error ? ' error' : '');
+      setTimeout(() => { toast.className = 'toast'; }, 3000);
     }
 
-    function generateCode() {
-      const prompt = document.getElementById('codeInput').value.trim();
-      const output = document.getElementById('codeOutput');
-      if (!prompt) return output.textContent = 'Írj be valamit!';
-      let response = '';
-      if (prompt.toLowerCase().includes('gomb')) {
-        response = `<button>Kattints rám</button>`;
-      } else {
-        response = `// Kódötlet a következőhöz: ${prompt}\nfunction példa() { console.log('Hello!'); }`;
-      }
-      output.textContent = response;
-      logAction('Kódkérés: ' + prompt);
+    function copyIP(ip){
+      navigator.clipboard.writeText(ip).then(() => {
+        showToast("Szerver IP kimásolva: " + ip);
+      }).catch(() => {
+        showToast("Hiba történt a másoláskor!", true);
+      });
     }
 
-    function logAction(text) {
-      const box = document.getElementById('logBox');
-      const time = new Date().toLocaleTimeString();
-      box.textContent += `\n[${time}] ${text}`;
-      box.scrollTop = box.scrollHeight;
-    }
-
-    function updateTime() {
-      document.getElementById('timeDisplay').textContent = '🕒 Jelenlegi idő: ' + new Date().toLocaleString();
-    }
-
-    setInterval(updateTime, 1000);
-    updateTime();
-
-    function toggleTheme() {
-      const dark = document.body.style.background.includes('1c1c2b');
-      if (dark) {
-        document.body.style.background = '#f1f1f1';
-        document.body.style.color = '#000';
-      } else {
-        location.reload();
+    async function fetchMCStatus() {
+      try {
+        const res = await fetch("https://api.mcsrvstat.us/2/kezdokartya.mcplay.hu");
+        const data = await res.json();
+        if (data.online) {
+          document.getElementById("mc-players").innerText =
+            data.players.online + " / " + data.players.max;
+        } else {
+          document.getElementById("mc-players").innerText = "Szerver offline!";
+        }
+      } catch (e) {
+        document.getElementById("mc-players").innerText = "Hiba a lekérésben!";
       }
     }
-  </script></body>
+
+    async function fetchDiscordStatus() {
+      try {
+        const res = await fetch("https://discord.com/api/guilds/1311760222234087475/widget.json");
+        const data = await res.json();
+
+        // Összes online tag (presence_count)
+        document.getElementById("discord-online").innerText =
+          data.presence_count + " fő online";
+      } catch (e) {
+        document.getElementById("discord-online").innerText = "Nem elérhető";
+      }
+    }
+
+    function updateAll() {
+      fetchMCStatus();
+      fetchDiscordStatus();
+    }
+
+    updateAll();
+    setInterval(updateAll, 30000); // frissítés 30 másodpercenként
+  </script>
+</body>
 </html>
