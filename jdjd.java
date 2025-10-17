@@ -33,12 +33,10 @@ function placeApple() {
 
 function draw() {
     basic.clearScreen()
-    // Kígyó kirajzolása
     for (let i = 0; i < snake.length; i++) {
         let brightness = i == snake.length - 1 ? 255 : 100
         led.plotBrightness(snake[i].x, snake[i].y, brightness)
     }
-    // Alma kirajzolása
     if (apple) {
         led.plotBrightness(apple.x, apple.y, 40)
     }
@@ -49,19 +47,21 @@ function gameOver() {
     control.reset()
 }
 
-// ----- Irányítás döntéssel -----
-input.onGesture(Gesture.TiltLeft, function () {
-    if (direction[0] != 1) direction = [-1, 0]  // Balra
-})
-input.onGesture(Gesture.TiltRight, function () {
-    if (direction[0] != -1) direction = [1, 0]  // Jobbra
-})
-input.onGesture(Gesture.LogoUp, function () {
-    if (direction[1] != 1) direction = [0, -1]  // Felfelé
-})
-input.onGesture(Gesture.LogoDown, function () {
-    if (direction[1] != -1) direction = [0, 1]  // Lefelé
-})
+function updateDirectionFromTilt() {
+    let x = input.acceleration(Dimension.X)
+    let y = input.acceleration(Dimension.Y)
+
+    // érzékenységi küszöb (kisebb = érzékenyebb)
+    let threshold = 200
+
+    if (Math.abs(x) > Math.abs(y)) {
+        if (x < -threshold && direction[0] != 1) direction = [-1, 0]  // Bal
+        else if (x > threshold && direction[0] != -1) direction = [1, 0]  // Jobb
+    } else {
+        if (y < -threshold && direction[1] != 1) direction = [0, -1]  // Fel
+        else if (y > threshold && direction[1] != -1) direction = [0, 1]   // Le
+    }
+}
 
 // ----- Játék indítás -----
 snake = [new Position(2, 4)]
@@ -70,6 +70,8 @@ draw()
 
 basic.forever(function () {
     basic.pause(500)
+
+    updateDirectionFromTilt()
 
     let head = snake[snake.length - 1]
     let next = head.add(direction)
