@@ -1,5 +1,5 @@
 let snake: Position[] = []
-let direction = [0, -1]  // felfelé
+let direction = [0, -1]  // Kezdetben felfelé
 let apple: Position = null
 
 class Position {
@@ -33,46 +33,44 @@ function placeApple() {
 
 function draw() {
     basic.clearScreen()
-    // Rajzoljuk a kígyót (fej világosabban)
+    // Kígyó kirajzolása
     for (let i = 0; i < snake.length; i++) {
         let brightness = i == snake.length - 1 ? 255 : 100
         led.plotBrightness(snake[i].x, snake[i].y, brightness)
     }
-    // Rajzoljuk az almát halványan
+    // Alma kirajzolása
     if (apple) {
         led.plotBrightness(apple.x, apple.y, 40)
     }
 }
-
-input.onButtonPressed(Button.A, function () {
-    // balra fordulás (óramutató járásával ellentétes)
-    direction = [-direction[1], direction[0]]
-})
-
-input.onButtonPressed(Button.B, function () {
-    // jobbra fordulás (óramutató járásával megegyező)
-    direction = [direction[1], -direction[0]]
-})
-
-input.onButtonPressed(Button.AB, function () {
-    // lefelé
-    direction = [0, 1]
-})
 
 function gameOver() {
     basic.showIcon(IconNames.Skull)
     control.reset()
 }
 
+// ----- Irányítás döntéssel -----
+input.onGesture(Gesture.TiltLeft, function () {
+    if (direction[0] != 1) direction = [-1, 0]  // Balra
+})
+input.onGesture(Gesture.TiltRight, function () {
+    if (direction[0] != -1) direction = [1, 0]  // Jobbra
+})
+input.onGesture(Gesture.LogoUp, function () {
+    if (direction[1] != 1) direction = [0, -1]  // Felfelé
+})
+input.onGesture(Gesture.LogoDown, function () {
+    if (direction[1] != -1) direction = [0, 1]  // Lefelé
+})
+
 // ----- Játék indítás -----
-snake = [new Position(2, 4)]  // kezdőpozíció
+snake = [new Position(2, 4)]
 placeApple()
 draw()
 
 basic.forever(function () {
     basic.pause(500)
 
-    // következő pozíció
     let head = snake[snake.length - 1]
     let next = head.add(direction)
 
@@ -80,12 +78,10 @@ basic.forever(function () {
         gameOver()
     }
 
-    // megnézzük, ettünk-e
     if (apple && next.equals(apple)) {
         snake.push(next)
         placeApple()
     } else {
-        // mozgás = új fej + régi farok törlése
         snake.push(next)
         snake.shift()
     }
